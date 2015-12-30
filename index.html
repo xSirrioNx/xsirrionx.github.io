@@ -22,31 +22,64 @@
 		var navigator = new FileNavigator(file);
 		var allLines;
 		navigator.readSomeLines(0, function (err, index, lines, eof) {
-			allLines = lines;
-			var z = 1;
-			for (var i = 0; i < allLines.length; i = i + 2) {
-				if (allLines[i] == "#EXTM3U") {
-					i = i - 1;
-				} else {
-					var buf = allLines[i].split('group-title="');
-					var finalBuf = buf[1].split('",');
-					var genres = finalBuf[0];
-					var name = finalBuf[1];
-					var channel = {};
-					channel.number = z;
-					channel.name = name;
-					channel.url = allLines[i + 1];
-					channel.genres = genres;
-					channel.splashscreen = "";
-					channel.logo = "";
-					mainTemplate.channels.push(channel);
-					z++;
-				}
-			}
+					allLines = lines;
+					var z = 1;
+					if (allLines[2].indexOf("#EXTGRP") != -1) {
+						for (var i = 1; i < allLines.length; i = i + 3) {
+							var buf = allLines[i].split('group-title="');
+							if (buf[1]) {
+								var finalBuf = buf[1].split('",');
+								var genres = finalBuf[0];
+								var name = finalBuf[1];
+							} else {
+								buf = allLines[i].split(',');
+								var genres = "";
+								var name = buf[1];
+							}
+							var bufGenres = allLines[i + 1].split("#EXTGRP:")
+							var channel = {};
+							channel.number = z;
+							channel.name = name;
+							channel.url = allLines[i + 2];
+							channel.genres = bufGenres[1];
+							channel.splashscreen = "";
+							channel.logo = "";
+							mainTemplate.channels.push(channel);
+							z++;
+						}
+					} else {
+						for (var i = 0; i < allLines.length; i = i + 2) {
+							if (allLines[i] == "#EXTM3U") {
+								i = i - 1;
+							} else {
+								var buf = allLines[i].split('group-title="');
+								if (buf[1]) {
+									var finalBuf = buf[1].split('",');
+									var genres = finalBuf[0];
+									var name = finalBuf[1];
+								} else {
+									buf = allLines[i].split(',');
+									var genres = "";
+									var name = buf[1];
+								}
+								var channel = {};
+								channel.number = z;
+								channel.name = name;
+								channel.url = allLines[i + 1];
+								channel.genres = genres;
+								channel.splashscreen = "";
+								channel.logo = "";
+								mainTemplate.channels.push(channel);
+								z++;
+							}
+						}
+
+					}
 			var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mainTemplate));
 
 			$('<br><a href="data:' + data + '" download="cumulustv_channels.json">download JSON</a>').appendTo('body');
-		});
+				}
+		);
 	}
 
 </script>
